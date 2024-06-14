@@ -1,4 +1,12 @@
-# Sub-modules
+# To access the module within the framework, define the source in the following:
+```bash
+  source = "AcceleratorFramew0rk/aaf/azurerm//modules/compute/terraform-azurerm-containergroup"
+```
 
-Create directories for each sub-module if required.
-README.md files will be automatically generated for each sub-module using `terraform-docs`.
+# Example Usage:
+module "containerinstance" {
+  source = "AcceleratorFramew0rk/aaf/azurerm//modules/compute/terraform-azurerm-containergroup"
+...
+...
+...
+}
