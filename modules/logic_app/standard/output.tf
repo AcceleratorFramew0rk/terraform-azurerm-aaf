@@ -1,3 +1,8 @@
+output "resource" {
+  value       = azurerm_logic_app_standard.logic_app_standard
+  description = "The ID of the Logic App Standard Instance"
+}
+
 output "id" {
   value       = azurerm_logic_app_standard.logic_app_standard.id
   description = "The ID of the Logic App Standard Instance"

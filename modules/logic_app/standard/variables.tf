@@ -1,58 +1,56 @@
-variable "global_settings" {
-  description = "Global settings object (see module README.md)"
+variable "name" {
+  description = "(Required) Specifies the name of the Container Registry. Changing this forces a new resource to be created."
+  type        = string
 }
-variable "client_config" {
-  description = "Client configuration object (see module README.md)."
+
+variable "resource_group_name" {
+  description = "(Required) The name of the resource group in which to create the Container Registry. Changing this forces a new resource to be created."
+  type        = string
 }
-variable "settings" {
-  description = "Settings object (see module README.md)."
+
+variable "location" {
+  description = "(Required) Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created."
+  type        = string
 }
-variable "resource_groups" {
-  description = "Resource Groups"
-}
-variable "storage_accounts" {
-  description = "Storage Accounts"
-}
-variable "app_service_plans" {
-  description = "App Service Plans"
-}
+
 variable "app_settings" {
   description = "Application settings"
-}
-variable "subnets" {
-  description = "Subnets"
-}
-variable "private_endpoints" {
-  default = {}
-}
-variable "private_dns" {
-  default = {}
-}
-variable "vnets" {
-  default = {}
-}
-variable "base_tags" {
-  default = {}
-}
-variable "identity" {
   default = null
 }
-variable "combined_objects" {
-  default = {}
-}
-variable "virtual_subnets" {
-  default = {}
-}
-variable "vnet_integration" {
-  default = {}
-}
-variable "diagnostic_profiles" {
-  default = {}
-}
-variable "diagnostics" {
-  default = null
-}
-variable "location" {
-  description = "The location of the Azure resources"
 
+variable "site_config" {
+  description = "site_config"
+  default = {}
+}
+
+variable "subnet_id" {
+  description = "subnet_id"
+  type        = string  
+}
+
+variable "app_service_plan_id" {
+  description = "app_service_plan_id"
+  type        = string  
+}
+
+variable "storage_account_name" {
+  description = "storage_account_name"
+  type        = string  
+  default = null
+}
+
+variable "storage_account_access_key" {
+  description = "storage_account_access_key"
+  type        = string  
+  default = null
+}
+
+variable "tags" {
+  type        = map(string)
+  default     = {}
+  description = "Custom tags to apply to the resource."
+}
+
+variable "identity" {
+  default = {}
 }
