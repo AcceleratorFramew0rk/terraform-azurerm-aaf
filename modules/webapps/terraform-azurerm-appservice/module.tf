@@ -1,42 +1,30 @@
-
-# resource "azurecaf_name" "app_service" {
-#   name          = var.name
-#   resource_type = "azurerm_app_service"
-#   prefixes      = var.global_settings.prefixes
-#   random_length = var.global_settings.random_length
-#   clean_input   = true
-#   passthrough   = var.global_settings.passthrough
-#   use_slug      = var.global_settings.use_slug
-# }
-
-
 # Per options https://www.terraform.io/docs/providers/azurerm/r/app_service.html
 
 resource "azurerm_app_service" "app_service" {
-  name                = var.name # azurecaf_name.app_service.result
-  location            = var.location # local.location
-  resource_group_name = var.resource_group_name # local.resource_group_name
+  name                = var.name 
+  location            = var.location 
+  resource_group_name = var.resource_group_name 
   app_service_plan_id = var.app_service_plan_id
-  tags                = var.tags # merge(local.tags, try(var.settings.tags, {}))
+  tags                = var.tags 
 
-  client_affinity_enabled = try(var.client_affinity_enabled, null) # lookup(var.settings, "client_affinity_enabled", null)
-  client_cert_enabled     = try(var.client_cert_enabled, null) # lookup(var.settings, "client_cert_enabled", null)
-  enabled                 = try(var.enabled, null) # lookup(var.settings, "enabled", null)
-  https_only              = try(var.https_only, null) # lookup(var.settings, "https_only", null)
+  client_affinity_enabled = try(var.client_affinity_enabled, null) 
+  client_cert_enabled     = try(var.client_cert_enabled, null) 
+  enabled                 = try(var.enabled, null) 
+  https_only              = try(var.https_only, null) 
 
   dynamic "identity" {
     for_each = try(var.identity, null) == null ? [] : [1]
 
     content {
       type         = var.identity.type
-      identity_ids = try(var.identity.identity_ids,null) # lower(var.identity.type) == "userassigned" ? local.managed_identities : null
+      identity_ids = try(var.identity.identity_ids,null) 
     }
   }
 
-  key_vault_reference_identity_id = try(var.key_vault_reference_identity_id, null) # can(var.settings.key_vault_reference_identity.key) ? var.combined_objects.managed_identities[try(var.settings.identity.lz_key, var.client_config.landingzone_key)][var.settings.key_vault_reference_identity.key].id : try(var.settings.key_vault_reference_identity.id, null)
+  key_vault_reference_identity_id = try(var.key_vault_reference_identity_id, null) 
 
   dynamic "site_config" {
-    # for_each = lookup(var.settings, "site_config", {}) != {} ? [1] : []
+
     for_each = try(var.site_config, null) != null ? [1] : []
 
     content {
@@ -62,7 +50,7 @@ resource "azurerm_app_service" "app_service" {
       use_32_bit_worker_process = lookup(var.site_config, "use_32_bit_worker_process", false)
       websockets_enabled        = lookup(var.site_config, "websockets_enabled", false)
       scm_type                  = lookup(var.site_config, "scm_type", null)
-      number_of_workers         = lookup(var.site_config, "number_of_workers", 1) # can(var.numberOfWorkers) || can(var.site_config.number_of_workers) ? try(var.numberOfWorkers, var.site_config.number_of_workers) : 1
+      number_of_workers         = lookup(var.site_config, "number_of_workers", 1) 
 
       dynamic "cors" {
         for_each = lookup(var.site_config, "cors", {}) != {} ? [1] : []
@@ -78,7 +66,7 @@ resource "azurerm_app_service" "app_service" {
         content {
           ip_address                = lookup(ip_restriction.value, "ip_address", null)
           service_tag               = lookup(ip_restriction.value, "service_tag", null)
-          virtual_network_subnet_id = lookup(ip_restriction.value, "virtual_network_subnet_id", null) # can(ip_restriction.value.virtual_network_subnet_id) || can(ip_restriction.value.virtual_network_subnet.id) || can(ip_restriction.value.virtual_network_subnet.subnet_key) == false ? try(ip_restriction.value.virtual_network_subnet_id, ip_restriction.value.virtual_network_subnet.id, null) : var.combined_objects.networking[try(ip_restriction.value.virtual_network_subnet.lz_key, var.client_config.landingzone_key)][ip_restriction.value.virtual_network_subnet.vnet_key].subnets[ip_restriction.value.virtual_network_subnet.subnet_key].id
+          virtual_network_subnet_id = lookup(ip_restriction.value, "virtual_network_subnet_id", null) 
           name                      = lookup(ip_restriction.value, "name", null)
           priority                  = lookup(ip_restriction.value, "priority", null)
           action                    = lookup(ip_restriction.value, "action", null)
@@ -100,7 +88,6 @@ resource "azurerm_app_service" "app_service" {
   app_settings = var.app_settings # local.app_settings
 
   dynamic "connection_string" {
-    # for_each = var.connection_strings
     for_each = try(var.connection_strings, null) != null ? [1] : []
     content {
       name  = connection_string.value.name
@@ -110,7 +97,6 @@ resource "azurerm_app_service" "app_service" {
   }
 
   dynamic "auth_settings" {
-    # for_each = lookup(var.settings, "auth_settings", {}) != {} ? [1] : []
     for_each = try(var.auth_settings, null) != null ? [1] : []
     content {
       enabled                        = lookup(var.auth_settings, "enabled", false)
@@ -127,8 +113,8 @@ resource "azurerm_app_service" "app_service" {
         for_each = lookup(var.auth_settings, "active_directory", {}) != {} ? [1] : []
 
         content {
-          client_id         = lookup(var.auth_settings.active_directory, "client_id", null) # can(var.auth_settings.active_directory.client_id_key) ? var.azuread_applications[try(var.auth_settings.active_directory.client_id_lz_key, var.client_config.landingzone_key)][var.auth_settings.active_directory.client_id_key].application_id : var.auth_settings.active_directory.client_id
-          client_secret     = lookup(var.auth_settings.active_directory, "client_secret", null) # can(var.auth_settings.active_directory.client_secret_key) ? var.azuread_service_principal_passwords[try(var.auth_settings.active_directory.client_secret_lz_key, var.client_config.landingzone_key)][var.auth_settings.active_directory.client_secret_key].service_principal_password : try(var.auth_settings.active_directory.client_secret, null)
+          client_id         = lookup(var.auth_settings.active_directory, "client_id", null) 
+          client_secret     = lookup(var.auth_settings.active_directory, "client_secret", null) 
           allowed_audiences = lookup(var.auth_settings.active_directory, "allowed_audiences", null)
         }
       }
@@ -175,26 +161,24 @@ resource "azurerm_app_service" "app_service" {
   }
 
   dynamic "storage_account" {
-    # for_each = lookup(var.settings, "storage_account", [])
     for_each = try(var.storage_account, null) != null ? [1] : [] 
     content {
       name         = storage_account.value.name
       type         = storage_account.value.type
-      account_name = lookup(storage_account.value, "account_name", null) # can(storage_account.value.account_key) ? var.storage_accounts[try(storage_account.value.lz_key, var.client_config.landingzone_key)][storage_account.value.account_key].name : try(storage_account.value.account_name, null)
+      account_name = lookup(storage_account.value, "account_name", null) 
       share_name   = storage_account.value.share_name
-      access_key   = lookup(storage_account.value, "access_key", null) # can(storage_account.value.account_key) ? var.storage_accounts[try(storage_account.value.lz_key, var.client_config.landingzone_key)][storage_account.value.account_key].primary_access_key : try(storage_account.value.access_key, null)
+      access_key   = lookup(storage_account.value, "access_key", null) 
       mount_path   = lookup(storage_account.value, "mount_path", null)
     }
   }
 
   dynamic "backup" {
-    # for_each = lookup(var.settings, "backup", {}) != {} ? [1] : []
     for_each = try(var.backup, null) != null ? [1] : []
 
     content {
       name                = var.backup.name
       enabled             = var.backup.enabled
-      storage_account_url = try(var.backup.storage_account_url, null) # try(var.backup.storage_account_url, local.backup_sas_url)
+      storage_account_url = try(var.backup.storage_account_url, local.backup_sas_url)
 
       dynamic "schedule" {
         for_each = lookup(var.backup, "schedule", {}) != {} ? [1] : []
@@ -211,7 +195,6 @@ resource "azurerm_app_service" "app_service" {
   }
 
   dynamic "logs" {
-    # for_each = lookup(var.settings, "logs", {}) != {} ? [1] : []
     for_each = try(var.logs, null) != null ? [1] : []
 
     content {
@@ -228,9 +211,9 @@ resource "azurerm_app_service" "app_service" {
             for_each = lookup(var.logs.application_logs, "azure_blob_storage", {}) != {} ? [1] : []
 
             content {
-              level             = var.logs.application_logs.azure_blob_storage.level
-              sas_url           = var.logs.application_logs.azure_blob_storage.sas_url # try(var.logs.application_logs.azure_blob_storage.sas_url, local.logs_sas_url)
-              retention_in_days = var.logs.application_logs.azure_blob_storage.retention_in_days
+              level             = try(var.logs.application_logs.azure_blob_storage.level, null)
+              sas_url           = try(var.logs.application_logs.azure_blob_storage.sas_url, local.logs_sas_url) # try(var.logs.application_logs.azure_blob_storage.sas_url, local.logs_sas_url)
+              retention_in_days = try(var.logs.application_logs.azure_blob_storage.retention_in_days, null)
             }
           }
         }
@@ -262,7 +245,6 @@ resource "azurerm_app_service" "app_service" {
   }
 
   dynamic "source_control" {
-    # for_each = lookup(var.settings, "source_control", {}) != {} ? [1] : []
     for_each = try(var.source_control,null) != null ? [1] : []
 
     content {
@@ -281,12 +263,3 @@ resource "azurerm_app_service" "app_service" {
     ]
   }
 }
-
-# resource "azurerm_app_service_custom_hostname_binding" "app_service" {
-#   for_each            = try(var.custom_hostname_binding, {})
-#   app_service_name    = azurerm_app_service.app_service.name
-#   resource_group_name = var.resource_group_name
-#   hostname            = each.value.hostname
-#   ssl_state           = try(each.value.ssl_state, null)
-#   thumbprint          = try(each.value.thumbprint, null)
-# }
