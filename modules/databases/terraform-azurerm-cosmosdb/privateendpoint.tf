@@ -1,9 +1,9 @@
 resource "azurerm_private_endpoint" "this" {
   for_each            = var.private_endpoint
   name                = each.value.name
-  location            = data.azurerm_resource_group.pe_vnet_rg[each.key].location
-  resource_group_name = data.azurerm_resource_group.pe_vnet_rg[each.key].name
-  subnet_id           = data.azurerm_subnet.pe_subnet[each.key].id
+  location            = each.value.location # try(data.azurerm_resource_group.pe_vnet_rg[each.key].location, null) == null ? each.value.location : data.azurerm_resource_group.pe_vnet_rg[each.key].location
+  resource_group_name = each.value.resource_group_name # try(data.azurerm_resource_group.pe_vnet_rg[each.key].name, null) == null ? each.value.resource_group_name : data.azurerm_resource_group.pe_vnet_rg[each.key].name
+  subnet_id           = each.value.subnet_id # try(data.azurerm_subnet.pe_subnet[each.key].id, null) == null ? each.value.subnet_id : data.azurerm_subnet.pe_subnet[each.key].id
 
   dynamic "private_dns_zone_group" {
     for_each = each.value.enable_private_dns_entry ? [1] : []
