@@ -44,6 +44,7 @@ locals {
         zone                 = zone
         # TODO
         vnet_subnet_id       = pool.vnet_subnet_id
+        node_labels          = pool.node_labels
       }
     ]
   ])

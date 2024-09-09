@@ -141,6 +141,7 @@ variable "node_pools" {
     zones           = optional(set(string))
     # TODO
     vnet_subnet_id  = optional(string)
+    node_labels  = optional(map(string), {})
   }))
   default     = {}
   description = <<-EOT
@@ -155,7 +156,7 @@ map(object({
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
-  zones                = (Optional) Specifies the subnet id that the node is created
+  vnet_subnet_id                = (Optional) Specifies the subnet id that the node is created
   zones                = (Optional) Specifies a list of Availability Zones in which this Kubernetes Cluster Node Pool should be located. Changing this forces a new Kubernetes Cluster Node Pool to be created.
 }))
 
