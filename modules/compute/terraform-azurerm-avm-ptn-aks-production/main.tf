@@ -11,6 +11,9 @@ resource "random_string" "acr_suffix" {
 }
 
 resource "azurerm_container_registry" "this" {
+  
+  count = var.enable_container_registry ? 1 : 0
+  
   location            = var.location
   name                = "cr${random_string.acr_suffix.result}"
   resource_group_name = var.resource_group_name

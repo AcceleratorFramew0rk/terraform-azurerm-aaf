@@ -243,4 +243,15 @@ variable "service_cidr" {
   type        = string
   description = "service cidr."
 }
+variable "enable_container_registry" {
+  type        = bool
+  description = "enable container registry."
+  default = false
+}
+variable "container_registry_id" {
+  type        = string
+  description = "container registry id"
+  default = null
+}
+
 
