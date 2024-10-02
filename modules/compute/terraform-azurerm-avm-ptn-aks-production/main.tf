@@ -22,7 +22,7 @@ resource "azurerm_container_registry" "this" {
 }
 resource "azurerm_role_assignment" "acr" {
   principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
-  scope                            = azurerm_container_registry.this.id
+  scope                            = try(var.container_registry_id, null) == null ? azurerm_container_registry.this[0].id : var.container_registry_id
   role_definition_name             = "AcrPull"
   skip_service_principal_aad_check = true
 }
@@ -38,7 +38,7 @@ resource "azurerm_user_assigned_identity" "aks" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
-  name                              = "aks-${var.name}"
+  name                              = var.name # "aks-${var.name}"
   resource_group_name               = var.resource_group_name
   automatic_channel_upgrade         = "patch"
   azure_policy_enabled              = true
