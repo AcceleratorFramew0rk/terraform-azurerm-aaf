@@ -54,6 +54,11 @@ resource "azurerm_kubernetes_cluster" "this" {
   workload_identity_enabled         = true
   node_resource_group               = var.node_resource_group
 
+  service_mesh_profile {
+    mode = "Istio"
+    # revisions = ["asm-1-20"] # null # leave it empty (the revisions will only be known after apply).
+  }
+
   default_node_pool {
     name                   = "agentpool"
     vm_size                = "Standard_D4d_v5"
