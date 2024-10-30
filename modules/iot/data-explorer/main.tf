@@ -9,3 +9,13 @@ resource "azurerm_kusto_cluster" "this" {
 
   tags = var.tags
 }
+
+# Kusto Database
+resource "azurerm_kusto_database" "adx_database" {
+  name                = "ksdb-${var.name}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  cluster_name        = azurerm_kusto_cluster.this.name
+  soft_delete_period  = var.soft_delete_period
+  hot_cache_period    = var.hot_cache_period
+}

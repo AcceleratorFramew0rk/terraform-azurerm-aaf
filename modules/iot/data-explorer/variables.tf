@@ -24,3 +24,22 @@ variable "sku_capacity" {
   type        = number
   default     = 2
 }
+
+variable "tags" {
+  description = "A map of tags to assign to the resource."
+  type        = map(string)
+  default     = {}
+}
+
+# azurerm_kusto_database variables
+variable "soft_delete_period" {
+  description = "The period data is kept in the database for soft deletion"
+  type        = string
+  default     = "P31D"
+}
+
+variable "hot_cache_period" {
+  description = "The period data is kept in hot cache"
+  type        = string
+  default     = "P7D"
+}

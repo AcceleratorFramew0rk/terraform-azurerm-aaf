@@ -30,6 +30,19 @@ variable "capacity" {
   default     = 1
 }
 
+
+variable "partition_count" {
+  description = "Capacity for the Event Hub Namespace."
+  type        = number
+  default     = 2
+}
+
+variable "message_retention" {
+  description = "Capacity for the Event Hub Namespace."
+  type        = number
+  default     = 7
+}
+
 variable "tags" {
   description = "A mapping of tags to assign to the resource."
   type        = map(string)
