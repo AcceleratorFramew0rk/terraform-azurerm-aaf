@@ -22,6 +22,9 @@ resource "azurerm_stream_analytics_cluster" "this" {
 }
 
 resource "azurerm_stream_analytics_job" "adl_asa" {
+
+  count = var.module_enabled ? 1 : 0
+
   name                                     = "asa-${var.name}"
   resource_group_name                      = var.resource_group_name
   location                                 = var.location
@@ -39,7 +42,6 @@ resource "azurerm_stream_analytics_job" "adl_asa" {
 QUERY
   tags                                     = var.tags
 
-  count = var.module_enabled ? 1 : 0
 }
 
 # IoT Hub: events

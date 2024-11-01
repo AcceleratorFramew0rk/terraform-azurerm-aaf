@@ -13,8 +13,8 @@ output "resource" {
   value       = azurerm_stream_analytics_cluster.this
 }
 
-output "job_resource" {
+output "stream_analytics_job_id" {
   description = "The ID of the Event Hub."
-  value       = azurerm_stream_analytics_job.adl_asa
+  value       = azurerm_stream_analytics_job.adl_asa[0].id
 }
 
