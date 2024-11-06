@@ -1,3 +1,8 @@
+output "resource" {
+  description = "The ID of the CDN FrontDoor Profile."
+  value       = azurerm_cdn_frontdoor_profile.cdn_frontdoor_profile
+}
+
 output "profile_name" {
   description = "The name of the CDN FrontDoor Profile."
   value       = azurerm_cdn_frontdoor_profile.cdn_frontdoor_profile.name
