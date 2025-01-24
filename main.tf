@@ -147,6 +147,7 @@ locals {
     log_analytics_workspace = {
       name = try(data.terraform_remote_state.gcci_platform.outputs.gcci_agency_workspace.name, null)
       id = try(data.terraform_remote_state.gcci_platform.outputs.gcci_agency_workspace.id, null)
+      resource = try(data.terraform_remote_state.gcci_platform.outputs.gcci_agency_workspace.resource, null)
     }
     resource_group = try(data.terraform_remote_state.gcci_platform.outputs.gcci_platform, null)
   }
