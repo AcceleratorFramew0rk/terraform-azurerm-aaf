@@ -26,6 +26,12 @@ variable "capacity" {
   default     = 1
 }
 
+variable "public_network_access_enabled" {
+  description = "The public network access enabled flag."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "A map of tags to assign to the resource."
   type        = map(string)

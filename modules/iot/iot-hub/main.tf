@@ -11,5 +11,7 @@ resource "azurerm_iothub" "iot_hub" {
     name     = var.sku
     capacity = var.capacity
   }
+  public_network_access_enabled = var.public_network_access_enabled  # Disables public access
+  
   tags = var.tags
 }
