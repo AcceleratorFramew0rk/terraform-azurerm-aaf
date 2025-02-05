@@ -14,35 +14,11 @@ variable "name" {
   }
 }
 
-variable "network" {
-  type = object({
-    name                = string
-    resource_group_name = string
-    node_subnet_id      = string
-    pod_cidr            = string
-    # TODO
-    dns_service_ip      = string
-    service_cidr        = string
-  })
-  description = "Values for the networking configuration of the AKS cluster"
-}
-
 # This is required for most resource modules
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
   nullable    = false
-}
-
-variable "acr" {
-  type = object({
-    name                          = string
-    private_dns_zone_resource_ids = set(string)
-    subnet_resource_id            = string
-
-  })
-  default     = null
-  description = "(Optional) Parameters for the Azure Container Registry to use with the Kubernetes Cluster."
 }
 
 variable "agents_tags" {
@@ -51,10 +27,18 @@ variable "agents_tags" {
   description = "(Optional) A mapping of tags to assign to the Node Pool."
 }
 
-variable "default_node_pool_vm_sku" {
+variable "client_id" {
   type        = string
-  default     = "Standard_D4d_v5"
-  description = "The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory."
+  default     = ""
+  description = "(Optional) The Client ID (appId) for the Service Principal used for the AKS deployment"
+  nullable    = false
+}
+
+variable "client_secret" {
+  type        = string
+  default     = ""
+  description = "(Optional) The Client Secret (password) for the Service Principal used for the AKS deployment"
+  nullable    = false
 }
 
 variable "enable_telemetry" {
@@ -65,6 +49,13 @@ This variable controls whether or not telemetry is enabled for the module.
 For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
+}
+
+variable "key_vault_secrets_provider_enabled" {
+  type        = bool
+  default     = false
+  description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+  nullable    = false
 }
 
 variable "kubernetes_version" {
@@ -81,7 +72,7 @@ variable "lock" {
   default     = null
   description = <<DESCRIPTION
   Controls the Resource Lock configuration for this resource. The following properties can be specified:
-
+  
   - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
   - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
   DESCRIPTION
@@ -90,6 +81,12 @@ variable "lock" {
     condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
     error_message = "Lock kind must be either `\"CanNotDelete\"` or `\"ReadOnly\"`."
   }
+}
+
+variable "log_analytics_workspace_id" {
+  type        = string
+  default     = null
+  description = "(Optional) The ID of the Log Analytics Workspace to use for the OMS agent."
 }
 
 # tflint-ignore: terraform_unused_declarations
@@ -101,7 +98,7 @@ variable "managed_identities" {
   default     = {}
   description = <<DESCRIPTION
   Controls the Managed Identity configuration on this resource. The following properties can be specified:
-
+  
   - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
   - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
   DESCRIPTION
@@ -123,10 +120,10 @@ variable "monitor_metrics" {
 EOT
 }
 
-variable "node_labels" {
-  type        = map(string)
-  default     = {}
-  description = "(Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool."
+variable "node_cidr" {
+  type        = string
+  default     = null
+  description = "(Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
 }
 
 variable "node_pools" {
@@ -137,14 +134,14 @@ variable "node_pools" {
     # do not add nodecount because we enforce the use of auto-scaling
     max_count       = optional(number)
     min_count       = optional(number)
-    os_sku          = optional(string, "AzureLinux")
+    os_sku          = optional(string)
     mode            = optional(string)
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     zones           = optional(set(string))
     # TODO
     vnet_subnet_id  = optional(string)
-    labels  = optional(map(string), {})
+    node_labels  = optional(map(string), {})
   }))
   default     = {}
   description = <<-EOT
@@ -155,15 +152,16 @@ map(object({
   orchestrator_version = (Required) The version of Kubernetes which should be used for this Node Pool. Changing this forces a new resource to be created.
   max_count            = (Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be greater than or equal to `min_count`.
   min_count            = (Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be less than or equal to `max_count`.
-  os_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`or `AzureLinux`. If not specified, the default is `AzureLinux`. Changing this forces a new resource to be created.
+  os_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`, `CBLMariner`, `Mariner`, `Windows2019`, `Windows2022`. If not specified, the default is `Ubuntu` if OSType=Linux or `Windows2019` if OSType=Windows. And the default Windows OSSKU will be changed to `Windows2022` after Windows2019 is deprecated. Changing this forces a new resource to be created.
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
-  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
+  vnet_subnet_id                = (Optional) Specifies the subnet id that the node is created
+  zones                = (Optional) Specifies a list of Availability Zones in which this Kubernetes Cluster Node Pool should be located. Changing this forces a new Kubernetes Cluster Node Pool to be created.
 }))
 
 Example input:
-```terraform
+```terraform 
   node_pools = {
     workload = {
       name                 = "workload"
@@ -187,11 +185,6 @@ Example input:
   ```
 EOT
   nullable    = false
-
-  validation {
-    condition     = alltrue([for pool in var.node_pools : contains(["Ubuntu", "AzureLinux"], pool.os_sku)])
-    error_message = "os_sku must be either Ubuntu or AzureLinux"
-  }
 }
 
 variable "orchestrator_version" {
@@ -200,33 +193,10 @@ variable "orchestrator_version" {
   description = "Specify which Kubernetes release to use. Specify only minor version, such as '1.28'."
 }
 
-variable "os_sku" {
-  type        = string
-  default     = "AzureLinux"
-  description = "(Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu` or `AzureLinux`. If not specified, the default is `AzureLinux`.Changing this forces a new resource to be created."
-
-  validation {
-    condition     = can(regex("^(Ubuntu|AzureLinux)$", var.os_sku))
-    error_message = "os_sku must be either Ubuntu or AzureLinux"
-  }
-}
-
-variable "private_dns_zone_id" {
+variable "pod_cidr" {
   type        = string
   default     = null
-  description = "(Optional) Either the ID of Private DNS Zone which should be delegated to this Cluster."
-
-  validation {
-    condition     = var.private_dns_zone_id == null || can(regex("^(/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.Network/privateDnsZones/[^/]+)$", var.private_dns_zone_id))
-    error_message = "private_dns_zone_id must be a valid Private DNS Zone ID"
-  }
-}
-
-variable "private_dns_zone_id_enabled" {
-  type        = bool
-  default     = false
-  description = "(Optional) Enable private DNS zone integration for the AKS cluster."
-  nullable    = false
+  description = "(Optional) The CIDR to use for pod IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
 }
 
 variable "rbac_aad_admin_group_object_ids" {
@@ -255,51 +225,33 @@ variable "tags" {
 }
 
 # TODO
-variable "log_analytics_workspace_id" {
+variable "vnet_subnet_id" {
   type        = string
-  default     = null
-  description = "(Optional) The ID of the Log Analytics Workspace to use for the OMS agent."
+  description = "vnet subnet id."
 }
-
-# variable "vnet_subnet_id" {
-#   type        = string
-#   description = "vnet subnet id."
-# }
 
 variable "node_resource_group" {
   type        = string
   description = "node resource group."
 }
 
-# variable "dns_service_ip" {
-#   type        = string
-#   description = "dns service ip."
-# }
-# variable "service_cidr" {
-#   type        = string
-#   description = "service cidr."
-# }
-# variable "enable_container_registry" {
-#   type        = bool
-#   description = "enable container registry."
-#   default = false
-# }
+variable "dns_service_ip" {
+  type        = string
+  description = "dns service ip."
+}
+variable "service_cidr" {
+  type        = string
+  description = "service cidr."
+}
+variable "enable_container_registry" {
+  type        = bool
+  description = "enable container registry."
+  default = false
+}
 variable "container_registry_id" {
   type        = string
   description = "container registry id"
   default = null
 }
 
-variable "resource_group_id" {
-  type        = string
-  description = "resource group id"
-}
 
-
-
-# variable "key_vault_secrets_provider_enabled" {
-#   type        = bool
-#   default     = false
-#   description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
-#   nullable    = false
-# }

@@ -4,7 +4,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_storage_account" "this" {
-  name                     = "stsatostpvtep01"
+  name                     = replace(replace("sa-${var.name}", "-", ""), "_", "") # "stsatostpvtep01"
   resource_group_name = var.resource_group_name
   location            = var.location
   account_tier             = "Standard"
