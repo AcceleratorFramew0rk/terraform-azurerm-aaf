@@ -12,7 +12,7 @@ resource "azurerm_kusto_cluster" "this" {
 
 # Kusto Database
 resource "azurerm_kusto_database" "adx_database" {
-  name                = "ksdb-${var.name}"
+  name                = "${var.name}"
   location            = var.location
   resource_group_name = var.resource_group_name
   cluster_name        = azurerm_kusto_cluster.this.name
