@@ -2,6 +2,7 @@ resource "azurerm_kusto_cluster" "this" {
   name                = var.name
   location            = var.location
   resource_group_name = var.resource_group_name
+  public_network_access_enabled = false
   sku {
     name     = var.sku_name
     capacity = var.sku_capacity
