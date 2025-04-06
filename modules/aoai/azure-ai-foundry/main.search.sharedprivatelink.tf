@@ -9,7 +9,6 @@
 
 # // Shared Private Link Resources
 resource "azurerm_search_shared_private_link_service" "shared_private_link1" {
-  count = 2
 
   name                = "search-shared-private-link-0"
   search_service_id   = module.searchservice.resource.id 
@@ -26,7 +25,6 @@ resource "azurerm_search_shared_private_link_service" "shared_private_link1" {
 }
 
 resource "azurerm_search_shared_private_link_service" "shared_private_link2" {
-  count = 2
 
   name                = "search-shared-private-link-1"
   search_service_id   = module.searchservice.resource.id 
@@ -47,7 +45,7 @@ resource "null_resource" "pause_before_next" {
   # count = try(local.base_shared_private_links, null) != null ? length(local.base_shared_private_links) : 0
 
   provisioner "local-exec" {
-    command = "sleep 2"
+    command = "sleep 5"
     interpreter = ["/bin/sh", "-c"]
   }
 }
