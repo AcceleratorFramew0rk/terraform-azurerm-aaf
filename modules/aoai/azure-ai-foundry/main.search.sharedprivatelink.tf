@@ -8,14 +8,14 @@
 
 
 # // Shared Private Link Resources
-resource "azurerm_search_shared_private_link_service" "shared_private_link" {
+resource "azurerm_search_shared_private_link_service" "shared_private_link1" {
   count = 2
 
-  name                = "search-shared-private-link-${count.index}"
+  name                = "search-shared-private-link-0"
   search_service_id   = module.searchservice.resource.id 
-  subresource_name    = local.base_shared_private_links[count.index].groupId
-  target_resource_id  = local.base_shared_private_links[count.index].privateLinkResourceId
-  request_message     = local.base_shared_private_links[count.index].requestMessage
+  subresource_name    = local.base_shared_private_links[0].groupId
+  target_resource_id  = local.base_shared_private_links[0].privateLinkResourceId
+  request_message     = local.base_shared_private_links[0].requestMessage
 
   depends_on = [
     azurerm_ai_services.this,
@@ -24,6 +24,24 @@ resource "azurerm_search_shared_private_link_service" "shared_private_link" {
     null_resource.pause_before_next,
    ]
 }
+
+resource "azurerm_search_shared_private_link_service" "shared_private_link2" {
+  count = 2
+
+  name                = "search-shared-private-link-1"
+  search_service_id   = module.searchservice.resource.id 
+  subresource_name    = local.base_shared_private_links[1].groupId
+  target_resource_id  = local.base_shared_private_links[1].privateLinkResourceId
+  request_message     = local.base_shared_private_links[1].requestMessage
+
+  depends_on = [
+    azurerm_ai_services.this,
+    azurerm_storage_account.this,
+    module.searchservice,
+    null_resource.pause_before_next,
+   ]
+}
+
 
 resource "null_resource" "pause_before_next" {
   # count = try(local.base_shared_private_links, null) != null ? length(local.base_shared_private_links) : 0
