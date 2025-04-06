@@ -8,7 +8,7 @@
 
 
 # // Shared Private Link Resources
-resource "azurerm_search_shared_private_link_service" "shared_private_link1" {
+resource "azurerm_search_shared_private_link_service" "shared_private_link0" {
 
   name                = "search-shared-private-link-0"
   search_service_id   = module.searchservice.resource.id 
@@ -24,7 +24,7 @@ resource "azurerm_search_shared_private_link_service" "shared_private_link1" {
    ]
 }
 
-resource "azurerm_search_shared_private_link_service" "shared_private_link2" {
+resource "azurerm_search_shared_private_link_service" "shared_private_link1" {
 
   name                = "search-shared-private-link-1"
   search_service_id   = module.searchservice.resource.id 
@@ -36,6 +36,7 @@ resource "azurerm_search_shared_private_link_service" "shared_private_link2" {
     azurerm_ai_services.this,
     azurerm_storage_account.this,
     module.searchservice,
+    azurerm_search_shared_private_link_service.shared_private_link0,
     null_resource.pause_before_next,
    ]
 }
