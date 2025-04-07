@@ -5,7 +5,10 @@ resource "azurerm_key_vault" "this" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
 
   sku_name                 = "standard"
+  soft_delete_retention_days  = 7
   purge_protection_enabled = true
+  public_network_access_enabled = false
+  tags = var.tags
 }
 
 resource "azurerm_key_vault_access_policy" "this" {
@@ -20,6 +23,33 @@ resource "azurerm_key_vault_access_policy" "this" {
     "Purge",
     "GetRotationPolicy",
   ]
+}
+
+
+resource "azurerm_private_dns_zone" "kv_dns_zone" {
+  name                = "privatelink.vaultcore.azure.net"
+  resource_group_name           = var.resource_group_name
+  tags = var.tags
+}
+
+resource "azurerm_private_endpoint" "kv_private_endpoint" {
+  name                = "${azurerm_key_vault.this.name}-pep"
+  location                      = var.location 
+  resource_group_name           = var.resource_group_name
+  subnet_id      = var.private_endpoint_subnet_id # try(local.remote.networking.virtual_networks.spoke_project.virtual_subnets[var.subnet_name].resource.id, null) != null ? local.remote.networking.virtual_networks.spoke_project.virtual_subnets[var.subnet_name].resource.id : var.subnet_id
+
+  private_service_connection {
+    name                           = "kvConnection"
+    private_connection_resource_id = azurerm_key_vault.this.id
+    subresource_names              = ["vault"]
+    is_manual_connection           = false
+  }
+
+  
+  private_dns_zone_group {
+    name = "kv-dns-group"
+    private_dns_zone_ids = [azurerm_private_dns_zone.kv_dns_zone.id]
+  }
 }
 
 

@@ -42,6 +42,7 @@ resource "azurerm_ai_foundry" "this" {
   identity {
     type = "SystemAssigned"
   }
+  tags = var.tags
 }
 
 # configure ai hub outbound rules to search services and ai services

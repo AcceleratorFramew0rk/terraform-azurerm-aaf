@@ -6,6 +6,7 @@ module "searchservice" {
   location                      = var.location 
   resource_group_name           = var.resource_group_name
   sku                 = "standard" # try(var.sku, "standard")
+  public_network_access_enabled = false
   # A system assigned identity must be provided even though the AzureRM provider states it is optional.
   managed_identities = {
     system_assigned = true
