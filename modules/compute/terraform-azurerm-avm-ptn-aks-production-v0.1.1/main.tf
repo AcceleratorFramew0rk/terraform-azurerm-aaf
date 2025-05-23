@@ -26,14 +26,14 @@ resource "azurerm_role_assignment" "acr" {
 }
 
 # TODO
-# resource "azurerm_role_assignment" "acr_identity" {
-#   count = length(var.container_registry_id) > 0 ? 1 : 0
-# 
-#   principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
-#   scope                            = try(var.container_registry_id, null) == null ? module.avm_res_containerregistry_registry[0].resource_id : var.container_registry_id
-#   role_definition_name             = "AcrPull"
-#   skip_service_principal_aad_check = true
-# }
+resource "azurerm_role_assignment" "acr_identity" {
+  count = length(var.container_registry_id) > 0 ? 1 : 0
+
+  principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
+  scope                            = try(var.container_registry_id, null) == null ? module.avm_res_containerregistry_registry[0].resource_id : var.container_registry_id
+  role_definition_name             = "AcrPull"
+  skip_service_principal_aad_check = true
+}
 
 
 resource "azurerm_user_assigned_identity" "aks" {
