@@ -3,7 +3,9 @@
 
 ### NOTE: This module follows the semantic versioning and versions prior to 1.0.0 should be consider pre-release versions.
 
-This is the Production Standard for AKS pattern module for [Azure Verified Modules (AVM)](https://azure.github.io/Azure-Verified-Modules/) library. This module deploys a production standard AKS cluster along with supporting a Virtual Network and Azure container registry. It provisions an environment sufficient for most production deployments for AKS. It leverages the AzureRM provider and sets a number of initial defaults to minimize the overall inputs for simple configurations.
+This is the Production Standard for AKS pattern module for [Azure Verified Modules (AVM)](https://azure.github.io/Azure-Verified-Modules/) library. This module deploys a production standard AKS cluster along with an Azure container registry. It is possible to provide an existing Log Analytics workspace or the module will create one for you. It provisions an environment sufficient for most production deployments for AKS. It leverages the AzureRM provider and sets a number of initial defaults to minimize the overall inputs for simple configurations. You can read more about our design choices in our [Tech Community Article](https://techcommunity.microsoft.com/t5/azure-for-isv-and-startups/how-to-deploy-a-production-ready-aks-cluster-with-terraform/ba-p/4122013).
+
+![AKS Production Stardard design diagram](images/diagram.png)
 
 Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. A module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
@@ -25,52 +27,41 @@ Major version Zero (0.y.z) is for initial development. Anything MAY change at an
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.3.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.4.0, < 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>=2.0, < 3.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.86.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, <5)
 
-- <a name="requirement_local"></a> [local](#requirement\_local) (2.4.1)
+- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (>= 0.3, < 1.0)
 
 - <a name="requirement_null"></a> [null](#requirement\_null) (>= 3.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
-
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (>= 1.4.0, < 2.0)
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.86.0)
-
-- <a name="provider_local"></a> [local](#provider\_local) (2.4.1)
-
-- <a name="provider_null"></a> [null](#provider\_null) (>= 3.0)
-
-- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
 
 ## Resources
 
 The following resources are used by this module:
 
 - [azapi_update_resource.aks_cluster_post_create](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azurerm_container_registry.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry) (resource)
 - [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
 - [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
 - [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_log_analytics_workspace_table.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.network_contributor_on_resource_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_user_assigned_identity.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
+- [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [null_resource.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
-- [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
-- [random_string.acr_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [local_file.compute_provider](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
-- [local_file.locations](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
+- [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [azapi_resource_list.example](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
+- [azurerm_user_assigned_identity.cluster_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) (data source)
+- [modtm_module_source.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -89,6 +80,21 @@ Description: The name for the AKS resources created in the specified Azure Resou
 
 Type: `string`
 
+### <a name="input_network"></a> [network](#input\_network)
+
+Description: Values for the networking configuration of the AKS cluster
+
+Type:
+
+```hcl
+object({
+    node_subnet_id = string
+    pod_cidr       = string
+    service_cidr   = optional(string)
+    dns_service_ip = optional(string)
+  })
+```
+
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: The resource group where the resources will be deployed.
@@ -99,6 +105,23 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
+### <a name="input_acr"></a> [acr](#input\_acr)
+
+Description: (Optional) Parameters for the Azure Container Registry to use with the Kubernetes Cluster.
+
+Type:
+
+```hcl
+object({
+    name                          = string
+    private_dns_zone_resource_ids = set(string)
+    subnet_resource_id            = string
+    zone_redundancy_enabled       = optional(bool)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_agents_tags"></a> [agents\_tags](#input\_agents\_tags)
 
 Description: (Optional) A mapping of tags to assign to the Node Pool.
@@ -107,21 +130,13 @@ Type: `map(string)`
 
 Default: `{}`
 
-### <a name="input_client_id"></a> [client\_id](#input\_client\_id)
+### <a name="input_default_node_pool_vm_sku"></a> [default\_node\_pool\_vm\_sku](#input\_default\_node\_pool\_vm\_sku)
 
-Description: (Optional) The Client ID (appId) for the Service Principal used for the AKS deployment
-
-Type: `string`
-
-Default: `""`
-
-### <a name="input_client_secret"></a> [client\_secret](#input\_client\_secret)
-
-Description: (Optional) The Client Secret (password) for the Service Principal used for the AKS deployment
+Description: The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory.
 
 Type: `string`
 
-Default: `""`
+Default: `"Standard_D4d_v5"`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -132,14 +147,6 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
-
-### <a name="input_key_vault_secrets_provider_enabled"></a> [key\_vault\_secrets\_provider\_enabled](#input\_key\_vault\_secrets\_provider\_enabled)
-
-Description: (Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver
-
-Type: `bool`
-
-Default: `false`
 
 ### <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version)
 
@@ -164,14 +171,6 @@ object({
     name = optional(string, null)
   })
 ```
-
-Default: `null`
-
-### <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id)
-
-Description: (Optional) The ID of the Log Analytics Workspace to use for the OMS agent.
-
-Type: `string`
 
 Default: `null`
 
@@ -212,13 +211,21 @@ object({
 
 Default: `null`
 
-### <a name="input_node_cidr"></a> [node\_cidr](#input\_node\_cidr)
+### <a name="input_network_policy"></a> [network\_policy](#input\_network\_policy)
 
-Description: (Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
+Description: (Optional) Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are `calico` and `cilium`. Defaults to `cilium`.
 
 Type: `string`
 
-Default: `null`
+Default: `"cilium"`
+
+### <a name="input_node_labels"></a> [node\_labels](#input\_node\_labels)
+
+Description: (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
+
+Type: `map(string)`
+
+Default: `{}`
 
 ### <a name="input_node_pools"></a> [node\_pools](#input\_node\_pools)
 
@@ -229,11 +236,12 @@ map(object({
   orchestrator\_version = (Required) The version of Kubernetes which should be used for this Node Pool. Changing this forces a new resource to be created.  
   max\_count            = (Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be greater than or equal to `min_count`.  
   min\_count            = (Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be less than or equal to `max_count`.  
-  os\_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`, `CBLMariner`, `Mariner`, `Windows2019`, `Windows2022`. If not specified, the default is `Ubuntu` if OSType=Linux or `Windows2019` if OSType=Windows. And the default Windows OSSKU will be changed to `Windows2022` after Windows2019 is deprecated. Changing this forces a new resource to be created.  
+  os\_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`or `AzureLinux`. If not specified, the default is `AzureLinux`. Changing this forces a new resource to be created.  
+  os\_disk\_type         = (Optional) Specifies the type of disk which should be used for the Operating System. Possible values include: `Managed`or `Ephemeral`. If not specified, the default is `Managed`. Changing this forces a new resource to be created.  
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.  
   os\_disk\_size\_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.  
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.  
-  zones                = (Optional) Specifies a list of Availability Zones in which this Kubernetes Cluster Node Pool should be located. Changing this forces a new Kubernetes Cluster Node Pool to be created.
+  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
 }))
 
 Example input:
@@ -255,6 +263,7 @@ Example input:
       max_count            = 4
       min_count            = 2
       os_sku               = "Ubuntu"
+      os_disk_type         = "Ephemeral"
       mode                 = "User"
     }
   }
@@ -270,11 +279,12 @@ map(object({
     # do not add nodecount because we enforce the use of auto-scaling
     max_count       = optional(number)
     min_count       = optional(number)
-    os_sku          = optional(string)
+    os_sku          = optional(string, "AzureLinux")
+    os_disk_type    = optional(string, "Managed")
     mode            = optional(string)
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
-    zones           = optional(set(string))
+    labels          = optional(map(string), {})
   }))
 ```
 
@@ -288,13 +298,45 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_pod_cidr"></a> [pod\_cidr](#input\_pod\_cidr)
+### <a name="input_os_disk_type"></a> [os\_disk\_type](#input\_os\_disk\_type)
 
-Description: (Optional) The CIDR to use for pod IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
+Description: (Optional) Specifies the OS Disk Type used by the agent pool. Possible values include: `Managed` or `Ephemeral`. If not specified, the default is `Managed`.Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `"Managed"`
+
+### <a name="input_os_sku"></a> [os\_sku](#input\_os\_sku)
+
+Description: (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu` or `AzureLinux`. If not specified, the default is `AzureLinux`.Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `"AzureLinux"`
+
+### <a name="input_outbound_type"></a> [outbound\_type](#input\_outbound\_type)
+
+Description: (Optional) Specifies the outbound type that will be used for cluster outbound (egress) routing. Possible values include: `loadBalancer`,`userDefinedRouting`,`managedNATGateway`,`userAssignedNATGateway`. If not specified, the default is `loadBalancer`.Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `"loadBalancer"`
+
+### <a name="input_private_dns_zone_id"></a> [private\_dns\_zone\_id](#input\_private\_dns\_zone\_id)
+
+Description: (Optional) Either the ID of Private DNS Zone which should be delegated to this Cluster.
 
 Type: `string`
 
 Default: `null`
+
+### <a name="input_private_dns_zone_id_enabled"></a> [private\_dns\_zone\_id\_enabled](#input\_private\_dns\_zone\_id\_enabled)
+
+Description: (Optional) Enable private DNS zone integration for the AKS cluster.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_rbac_aad_admin_group_object_ids"></a> [rbac\_aad\_admin\_group\_object\_ids](#input\_rbac\_aad\_admin\_group\_object\_ids)
 
@@ -332,29 +374,147 @@ Default: `null`
 
 The following outputs are exported:
 
-### <a name="output_resource"></a> [resource](#output\_resource)
+### <a name="output_current_kubernetes_version"></a> [current\_kubernetes\_version](#output\_current\_kubernetes\_version)
 
-Description: This is the full output for the resource.
+Description: The current version running on the Azure Kubernetes Managed Cluster
+
+### <a name="output_fqdn"></a> [fqdn](#output\_fqdn)
+
+Description: The FQDN of the Azure Kubernetes Managed Cluster
+
+### <a name="output_http_application_routing_zone_name"></a> [http\_application\_routing\_zone\_name](#output\_http\_application\_routing\_zone\_name)
+
+Description: The Zone Name of the HTTP Application Routing
+
+### <a name="output_identity_principal_id"></a> [identity\_principal\_id](#output\_identity\_principal\_id)
+
+Description: The Principal ID associated with this Managed Service Identity
+
+### <a name="output_identity_tenant_id"></a> [identity\_tenant\_id](#output\_identity\_tenant\_id)
+
+Description: The Tenant ID associated with this Managed Service Identity
+
+### <a name="output_ingress_application_gateway_identity_client_id"></a> [ingress\_application\_gateway\_identity\_client\_id](#output\_ingress\_application\_gateway\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used by the Application Gateway
+
+### <a name="output_ingress_application_gateway_identity_object_id"></a> [ingress\_application\_gateway\_identity\_object\_id](#output\_ingress\_application\_gateway\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used by the Application Gateway
+
+### <a name="output_ingress_application_gateway_identity_user_assigned_identity_id"></a> [ingress\_application\_gateway\_identity\_user\_assigned\_identity\_id](#output\_ingress\_application\_gateway\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used by the Application Gateway
+
+### <a name="output_key_vault_secrets_provider_secret_identity_client_id"></a> [key\_vault\_secrets\_provider\_secret\_identity\_client\_id](#output\_key\_vault\_secrets\_provider\_secret\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used by the Secret Provider
+
+### <a name="output_key_vault_secrets_provider_secret_identity_object_id"></a> [key\_vault\_secrets\_provider\_secret\_identity\_object\_id](#output\_key\_vault\_secrets\_provider\_secret\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used by the Secret Provider
+
+### <a name="output_key_vault_secrets_provider_secret_identity_user_assigned_identity_id"></a> [key\_vault\_secrets\_provider\_secret\_identity\_user\_assigned\_identity\_id](#output\_key\_vault\_secrets\_provider\_secret\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used by the Secret Provider
+
+### <a name="output_kube_admin_config"></a> [kube\_admin\_config](#output\_kube\_admin\_config)
+
+Description: The kube\_admin\_config block for the Azure Kubernetes Managed Cluster
+
+### <a name="output_kube_admin_config_raw"></a> [kube\_admin\_config\_raw](#output\_kube\_admin\_config\_raw)
+
+Description: Raw Kubernetes config for the admin account
+
+### <a name="output_kube_config"></a> [kube\_config](#output\_kube\_config)
+
+Description: The kube\_config block for the Azure Kubernetes Managed Cluster
+
+### <a name="output_kube_config_raw"></a> [kube\_config\_raw](#output\_kube\_config\_raw)
+
+Description: Raw Kubernetes config for the user account
+
+### <a name="output_kubelet_identity_client_id"></a> [kubelet\_identity\_client\_id](#output\_kubelet\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity assigned to the Kubelets
+
+### <a name="output_kubelet_identity_object_id"></a> [kubelet\_identity\_object\_id](#output\_kubelet\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity assigned to the Kubelets
+
+### <a name="output_kubelet_identity_user_assigned_identity_id"></a> [kubelet\_identity\_user\_assigned\_identity\_id](#output\_kubelet\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity assigned to the Kubelets
+
+### <a name="output_load_balancer_profile_effective_outbound_ips"></a> [load\_balancer\_profile\_effective\_outbound\_ips](#output\_load\_balancer\_profile\_effective\_outbound\_ips)
+
+Description: The effective outbound IPs for the load balancer profile
+
+### <a name="output_nat_gateway_profile_effective_outbound_ips"></a> [nat\_gateway\_profile\_effective\_outbound\_ips](#output\_nat\_gateway\_profile\_effective\_outbound\_ips)
+
+Description: The effective outbound IPs for the NAT Gateway profile
+
+### <a name="output_network_profile"></a> [network\_profile](#output\_network\_profile)
+
+Description: The network profile block for the Kubernetes cluster
+
+### <a name="output_node_resource_group"></a> [node\_resource\_group](#output\_node\_resource\_group)
+
+Description: The auto-generated Resource Group containing resources for the Managed Kubernetes Cluster
+
+### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
+
+Description: The ID of the Resource Group containing resources for the Managed Kubernetes Cluster
+
+### <a name="output_oidc_issuer_url"></a> [oidc\_issuer\_url](#output\_oidc\_issuer\_url)
+
+Description: The OIDC issuer URL that is associated with the cluster
+
+### <a name="output_oms_agent_identity_client_id"></a> [oms\_agent\_identity\_client\_id](#output\_oms\_agent\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used by the OMS Agents
+
+### <a name="output_oms_agent_identity_object_id"></a> [oms\_agent\_identity\_object\_id](#output\_oms\_agent\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used by the OMS Agents
+
+### <a name="output_oms_agent_identity_user_assigned_identity_id"></a> [oms\_agent\_identity\_user\_assigned\_identity\_id](#output\_oms\_agent\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used by the OMS Agents
+
+### <a name="output_portal_fqdn"></a> [portal\_fqdn](#output\_portal\_fqdn)
+
+Description: The FQDN for the Azure Portal resources when private link has been enabled
+
+### <a name="output_private_fqdn"></a> [private\_fqdn](#output\_private\_fqdn)
+
+Description: The FQDN for the Kubernetes Cluster when private link has been enabled
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: The `azurerm_kubernetes_cluster`'s resource id.
+Description: The Kubernetes Managed Cluster ID.
+
+### <a name="output_web_app_routing_web_app_routing_identity_client_id"></a> [web\_app\_routing\_web\_app\_routing\_identity\_client\_id](#output\_web\_app\_routing\_web\_app\_routing\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used for Web App Routing
+
+### <a name="output_web_app_routing_web_app_routing_identity_object_id"></a> [web\_app\_routing\_web\_app\_routing\_identity\_object\_id](#output\_web\_app\_routing\_web\_app\_routing\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used for Web App Routing
+
+### <a name="output_web_app_routing_web_app_routing_identity_user_assigned_identity_id"></a> [web\_app\_routing\_web\_app\_routing\_identity\_user\_assigned\_identity\_id](#output\_web\_app\_routing\_web\_app\_routing\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used for Web App Routing
 
 ## Modules
 
 The following Modules are called:
 
-### <a name="module_regions"></a> [regions](#module\_regions)
+### <a name="module_avm_res_containerregistry_registry"></a> [avm\_res\_containerregistry\_registry](#module\_avm\_res\_containerregistry\_registry)
 
-Source: Azure/regions/azurerm
+Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: >= 0.3.0
-
-### <a name="module_vnet"></a> [vnet](#module\_vnet)
-
-Source: Azure/subnets/azurerm
-
-Version: 1.0.0
+Version: 0.4.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

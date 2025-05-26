@@ -1,4 +1,9 @@
-# TODO
+# ** IMPORTANT: Different from AVM
+# 1. line 89:    host_encryption_enabled = false # true
+# 2. line 297:   vnet_subnet_id        = each.value.node_subnet_id # TODO: vnet_subnet_id        = var.network.node_subnet_id
+# 3. line 78-82 service mesh:      service_mesh_profile { ... ["asm-1-23"] }
+# 4. line 63    name                              = var.name # TODO: "aks-${var.name}"
+# 5. variables.tf line 155    vnet_subnet_id  = string , local.tf line 58 vnet_subnet_id       = pool.vnet_subnet_id
 module "avm_res_containerregistry_registry" {
   for_each                      = toset(var.acr == null ? [] : ["acr"])
   source                        = "Azure/avm-res-containerregistry-registry/azurerm"
@@ -7,6 +12,7 @@ module "avm_res_containerregistry_registry" {
   location                      = var.location
   resource_group_name           = var.resource_group_name
   sku                           = "Premium"
+  zone_redundancy_enabled       = coalesce(var.acr.zone_redundancy_enabled, true)
   public_network_access_enabled = false
   private_endpoints = {
     primary = {
@@ -25,17 +31,6 @@ resource "azurerm_role_assignment" "acr" {
   skip_service_principal_aad_check = true
 }
 
-# TODO
-# resource "azurerm_role_assignment" "acr_identity" {
-#   count = length(var.container_registry_id) > 0 ? 1 : 0
-# 
-#   principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
-#   scope                            = try(var.container_registry_id, null) == null ? module.avm_res_containerregistry_registry[0].resource_id : var.container_registry_id
-#   role_definition_name             = "AcrPull"
-#   skip_service_principal_aad_check = true
-# }
-
-
 resource "azurerm_user_assigned_identity" "aks" {
   count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 0 : 1
 
@@ -45,22 +40,14 @@ resource "azurerm_user_assigned_identity" "aks" {
   tags                = var.tags
 }
 
-# TODO
-# data "azurerm_resource_group" "this" {
-#   name = var.resource_group_name
-# }
-
 data "azurerm_user_assigned_identity" "cluster_identity" {
   name                = split("/", one(local.managed_identities.user_assigned.this.user_assigned_resource_ids))[8]
-  # TODO
-  resource_group_name = var.resource_group_name # data.azurerm_resource_group.this.name
+  resource_group_name = var.resource_group_name
 }
 
 resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  # TODO
-  scope                = var.resource_group_id
-  # scope                = data.azurerm_resource_group.this.id
+  scope                = local.network_resource_group_id
   role_definition_name = "Network Contributor"
 }
 
@@ -74,8 +61,7 @@ resource "azurerm_role_assignment" "dns_zone_contributor" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
-  # TODO
-  name                              = var.name # "aks-${var.name}"
+  name                              = var.name # TODO: "aks-${var.name}"
   resource_group_name               = var.resource_group_name
   automatic_upgrade_channel         = "patch"
   azure_policy_enabled              = true
@@ -90,25 +76,23 @@ resource "azurerm_kubernetes_cluster" "this" {
   sku_tier                          = "Standard"
   tags                              = var.tags
   workload_identity_enabled         = true
-  # TODO
-  node_resource_group               = var.node_resource_group
-
+  # TODO: add service_mesh_profile
   service_mesh_profile {
     mode = "Istio"
-    revisions = ["asm-1-23"] # ["asm-1-22"] # null # leave it empty (the revisions will only be known after apply).
+    revisions = ["asm-1-23"] 
   }
 
   default_node_pool {
     name                    = "agentpool"
     vm_size                 = var.default_node_pool_vm_sku
     auto_scaling_enabled    = true
-    # TODO:
-    host_encryption_enabled = false # true
+    host_encryption_enabled = false # TODO: true
     max_count               = 9
     max_pods                = 110
     min_count               = 3
     node_labels             = var.node_labels
     orchestrator_version    = var.orchestrator_version
+    os_disk_type            = var.os_disk_type
     os_sku                  = var.os_sku
     tags                    = merge(var.tags, var.agents_tags)
     vnet_subnet_id          = var.network.node_subnet_id
@@ -144,17 +128,17 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   network_profile {
     network_plugin      = "azure"
+    dns_service_ip      = local.dns_service_ip
     load_balancer_sku   = "standard"
+    network_data_plane  = var.network_policy == "cilium" ? "cilium" : null
     network_plugin_mode = "overlay"
-    network_policy      = "calico"
-    pod_cidr            = var.network.pod_cidr # var.pod_cidr
-    # TODO
-    dns_service_ip      = var.network.dns_service_ip
+    network_policy      = var.network_policy
+    outbound_type       = var.outbound_type
+    pod_cidr            = var.network.pod_cidr
     service_cidr        = var.network.service_cidr
   }
   oms_agent {
-    # TODO
-    log_analytics_workspace_id      = var.log_analytics_workspace_id # azurerm_log_analytics_workspace.this.id
+    log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
     msi_auth_for_monitoring_enabled = true
   }
 
@@ -209,29 +193,28 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
   }
 }
 
-# TODO
-# resource "azurerm_log_analytics_workspace" "this" {
-#   location            = var.location
-#   name                = "log-${var.name}-aks"
-#   resource_group_name = var.resource_group_name
-#   sku                 = "PerGB2018"
-#   tags                = var.tags
-# }
+resource "azurerm_log_analytics_workspace" "this" {
+  location            = var.location
+  name                = "log-${var.name}-aks"
+  resource_group_name = var.resource_group_name
+  sku                 = "PerGB2018"
+  tags                = var.tags
+}
 
-# resource "azurerm_log_analytics_workspace_table" "this" {
-#   for_each = toset(local.log_analytics_tables)
+resource "azurerm_log_analytics_workspace_table" "this" {
+  for_each = toset(local.log_analytics_tables)
 
-#   name         = each.value
-#   workspace_id = azurerm_log_analytics_workspace.this.id
-#   plan         = "Basic"
-# }
+  name                    = each.value
+  workspace_id            = azurerm_log_analytics_workspace.this.id
+  plan                    = "Basic"
+  total_retention_in_days = 30
+}
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
   name                           = "amds-${var.name}-aks"
   target_resource_id             = azurerm_kubernetes_cluster.this.id
   log_analytics_destination_type = "Dedicated"
-  # TODO
-  log_analytics_workspace_id     = var.log_analytics_workspace_id
+  log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
 
   # Kubernetes API Server
   enabled_log {
@@ -299,7 +282,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   })
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  name                  = "np${each.value.name}"
+  name                  = each.value.name
   vm_size               = each.value.vm_size
   auto_scaling_enabled  = true
   max_count             = each.value.max_count
@@ -307,10 +290,10 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   node_labels           = each.value.labels
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
+  os_disk_type          = each.value.os_disk_type
   os_sku                = each.value.os_sku
   tags                  = each.value.tags
-  # TODO
-  vnet_subnet_id        = each.value.vnet_subnet_id # var.network.node_subnet_id
+  vnet_subnet_id        = each.value.vnet_subnet_id # TODO: vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zone
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
@@ -334,29 +317,3 @@ data "azapi_resource_list" "example" {
   }
   response_export_values = ["*"]
 }
-
-# # These resources allow the use of consistent local data files, and semver versioning
-# data "local_file" "compute_provider" {
-#   filename = "${path.module}/data/microsoft.compute_resourceTypes.json"
-# }
-
-# data "local_file" "locations" {
-#   filename = "${path.module}/data/locations.json"
-# }
-
-# TODO: comment off vnet and passin subnet id
-
-# module "vnet" {
-#   source  = "Azure/subnets/azurerm"
-#   version = "1.0.0"
-
-#   resource_group_name = var.resource_group_name
-#   subnets = {
-#     nodecidr = {
-#       address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
-#     }
-#   }
-#   virtual_network_address_space = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
-#   virtual_network_location      = var.location
-#   virtual_network_name          = "vnet"
-# }

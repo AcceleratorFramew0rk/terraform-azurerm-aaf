@@ -51,10 +51,10 @@ locals {
         tags                 = pool.tags
         labels               = pool.labels
         os_sku               = pool.os_sku
+        os_disk_type         = pool.os_disk_type
         mode                 = pool.mode
         os_disk_size_gb      = pool.os_disk_size_gb
-        zone                 = [zone]                
-        # TODO
+        zone                 = [zone]
         vnet_subnet_id       = pool.vnet_subnet_id
       }
     ]
@@ -81,4 +81,13 @@ locals {
       }
     }
   }
+}
+
+locals {
+  network_resource_group_id = regex("(.*?/resourceGroups/[^/]+)", var.network.node_subnet_id)[0]
+}
+
+locals {
+  dns_service_ip           = local.has_network_service_cidr ? (try(var.network.dns_service_ip, null) != null ? var.network.dns_service_ip : cidrhost(var.network.service_cidr, 10)) : null
+  has_network_service_cidr = try(var.network.service_cidr, null) != null
 }

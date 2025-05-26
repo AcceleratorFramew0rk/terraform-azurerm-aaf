@@ -4,7 +4,7 @@
 
 formatter: "markdown document" # this is required
 
-version: "~> 0.17.0"
+version: "~> 0.18"
 
 header-from: "_header.md"
 footer-from: "_footer.md"
@@ -22,8 +22,6 @@ content: |-
 
   <!-- markdownlint-disable MD033 -->
   {{ .Requirements }}
-
-  {{ .Providers }}
 
   {{ .Resources }}
 
@@ -60,7 +58,7 @@ settings:
   hide-empty: false
   html: true
   indent: 2
-  lockfile: true
+  lockfile: false
   read-comments: true
   required: true
   sensitive: true
