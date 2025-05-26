@@ -79,7 +79,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   # TODO: add service_mesh_profile
   service_mesh_profile {
     mode = "Istio"
-    revisions = ["asm-1-23"] 
+    revisions = ["asm-1-25"] 
   }
 
   default_node_pool {
